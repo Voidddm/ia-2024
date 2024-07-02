@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconocimiento de Dígitos</title>
+    <link rel="stylesheet" href="/static/styles.css"> <!-- Ruta al archivo CSS en la carpeta static -->
+</head>
+<body>
+    <header>
+        <h1>Sistema de Reconocimiento de Dígitos</h1>
+    </header>
+    <main>
+        <div class="container">
+            <section id="upload-form">
+                <h2>Subir Imagen PNG para Reconocimiento de Dígitos</h2>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <input type="file" name="file" id="fileInput" accept=".png">
+                    <button type="button" onclick="uploadImage()">Enviar Imagen</button>
+                </form>
+                <br>
+                <div id="result"></div>
+            </section>
+    
+            <section id="correct-form" style="display:none;">
+                <h2>Corregir Predicción</h2>
+                <form id="correctForm">
+                    <label for="correctDigit">Número Correcto:</label>
+                    <input type="text" id="correctDigit" name="correctDigit">
+                    <button type="button" onclick="correctPrediction()">Enviar Corrección</button>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        let lastImage = null;
+
+        function uploadImage() {
+            var formData = new FormData();
+            var fileInput = document.getElementById('fileInput');
+            formData.append('file', fileInput.files[0]);
+            lastImage = fileInput.files[0];
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = `El dígito reconocido es: ${data.digit}`;
+                document.getElementById('correct-form').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error al enviar la imagen:', error);
+                document.getElementById('result').innerHTML = 'Error al enviar la imagen. Por favor, intenta de nuevo.';
+            });
+        }
+
+        function correctPrediction() {
+            var formData = new FormData();
+            formData.append('file', lastImage);
+            var correctDigit = document.getElementById('correctDigit').value;
+            formData.append('correctDigit', correctDigit);
+
+            fetch('/correct', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Corrección enviada correctamente');
+            })
+            .catch(error => {
+                console.error('Error al enviar la corrección:', error);
+            });
+        }
+    </script>
+</body>
+</html>
